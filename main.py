@@ -8,19 +8,23 @@ from base64 import b64encode, b64decode
 
 os.system('cls' if os.name == 'nt' else 'clear')
 
+random.seed(1)
+
 # 256-bit key (32 bytes)
 # Storing as a hexadecimal number, but need to convert to string and then encode as bytes
-hex_key = 'c3376601427a45dbd2ad34dbcd5325e25e0305f48b3a9a3fcb80e861858ab249'
+# Size of key is 64 characters * 4 bits = 256 bits (32 bytes)
+hex_key = 'C3376601427A45DBD2AD34DBCD5325E25E0305F48B3A9A3FCB80E861858AB249'
 byte_key = bytearray.fromhex(hex_key)
 
 mode = MODE_ECB
 mode = MODE_CTR
 
-nonce_length = 8
+# Nonce length in bytes
+nonce_length = 64
 
-# Create a nonce at run time, so as not to reuse it on subsequent encryptions
+# Create a nonce randomly
 temp_array = []
-for i in range(nonce_length):
+for i in range(nonce_length/8):
     temp_array.append(random.randint(0,255))
 nonce = bytearray(temp_array)
 
