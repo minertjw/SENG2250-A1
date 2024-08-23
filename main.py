@@ -37,6 +37,19 @@ def XOR(outIV, chunk):
             result += str(0)
     return result
 
+def compareCipher(ciphertext1, ciphertext2):
+    differences = 0
+    difference_positions = ""
+    for j in range(len(ciphertext1)):
+        if ciphertext1[j] != ciphertext2[j]:
+            differences+=1
+            difference_positions+=u'\u2193'
+        else:
+            difference_positions+=" "
+        if (j+1)%8==0:
+            difference_positions+=" "
+    print("Number of altered bits ",counter, " = ",differences,sep="")
+
 # 256-bit key (32 bytes)
 # Storing as a hexadecimal number, but need to convert to string and then encode as bytes
 # Size of key is 64 characters * 4 bits = 256 bits (32 bytes)
@@ -75,8 +88,9 @@ for i in range(0, len(byte_plaintext), len(iv)):
     print("    Result of XOR:", BinaryToHex(result))
     ciphertext += result
     iv[-1]+=1
+    counter+=1
 
-print("\nEntire Ciphertext:", BinaryToHex(ciphertext),"\n\n\n")
+print("\nEntire Ciphertext:", BinaryToHex(ciphertext),"\n\n")
 
 
 # five unique 1-bit flips
@@ -121,7 +135,7 @@ for j in range(5):
 
 ciphertext = cipher.encrypt(byte_plaintext)
 
-# print(ciphertext_list)
+print("")
 counter = 1
 for variant_ciphertext in ciphertext_list:
     differences = 0
@@ -135,8 +149,11 @@ for variant_ciphertext in ciphertext_list:
         if (j+1)%8==0:
             difference_positions+=" "
     print("Number of altered bits ",counter, " = ",differences,sep="")
+    print("Original Ciphertext:  ", end="")
     nicePrintBits(original_ciphertext)
+    print("Difference Positions: ", end="")
     print(difference_positions)
+    print("Altered Ciphertext:   ", end="")
     nicePrintBits(variant_ciphertext)
     print("")
     counter+=1
