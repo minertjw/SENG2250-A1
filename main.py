@@ -3,29 +3,37 @@ import random
 
 from Crypto.Cipher import AES
 from Crypto.Cipher.AES import MODE_ECB
-from convert import BinaryToHex, StringToBinary, HexToBinary, StringToHex
 
 os.system('cls')
 
+# Set the seed of the random module to allow for easier debugging during development
 random.seed(1)
 
+##########################################
+######### AES CTR Demonstration ##########
+##########################################
+
+# Prints the Initialisation Vector
 def printIV(iv):
     for i in iv:
         binary = "{:08d}".format(int(bin(i).split('b')[1]))
         print(BinaryToHex(binary),end="")
     print("")
 
+# Adds spacing after every eighth bit for readability
 def nicePrintBits(byteString):
     for i in range(0,len(byteString), 8):
         print(byteString[i:i+8],end=" ")
     print("")
 
+# Converts the byte array objects to a string of 0's and 1's for printing
 def ByteToBit(arr):
     bits = ""
     for i in arr:
         bits += "{:08d}".format(int(bin(i).split("b")[1]))
     return bits
 
+# Exclusive or's two byte arrays
 def XOR(outIV, chunk):
     outIVBits = ByteToBit(outIV)
     chunkBits = ByteToBit(chunk)
@@ -37,12 +45,27 @@ def XOR(outIV, chunk):
             result += str(0)
     return result
 
+# Returns the number of differences between two ciphertexts
 def compareCiphertext(ciphertext1, ciphertext2):
     differences = 0
     for i in range(len(ciphertext1)):
         if ciphertext1[i] != ciphertext2[i]:
             differences+=1
     return differences
+
+# Converts a string of real characters to a string of hexadecimal characters
+def StringToHex(text_string):
+    hex_string = ''
+    for t in text_string:
+        hex_string += hex(ord(t)).split('x')[1]
+    return hex_string
+
+# Converts a string of 0's and 1's to a string of hexadecimal characters
+def BinaryToHex(binary_string):
+    hex_string = ''
+    for i in range(0, len(binary_string), 4):
+        hex_string += hex(int(binary_string[i:i+4],2)).split('x')[1]
+    return hex_string
 
 # 256-bit key (32 bytes)
 # Storing as a hexadecimal number, but need to convert to string and then encode as bytes
@@ -69,6 +92,7 @@ print("IV:", BinaryToHex(ByteToBit(iv)))
 # Define cipher
 cipher = AES.new(key=byte_key, mode=MODE_ECB)
 
+# Prints the inputs and outputs from each block of AES
 ciphertext = ""
 counter = 1
 for i in range(0, len(byte_plaintext), len(iv)):
@@ -77,7 +101,6 @@ for i in range(0, len(byte_plaintext), len(iv)):
     outIV = cipher.encrypt(iv)
     print("    Output of AES:", BinaryToHex(ByteToBit(outIV)))
     chunk = byte_plaintext[i:i+len(iv)]
-    # print(chunk)
     result = XOR(outIV, chunk)
     print("    Result of XOR:", BinaryToHex(result))
     ciphertext += result
@@ -86,9 +109,8 @@ for i in range(0, len(byte_plaintext), len(iv)):
 
 print("\nEntire Ciphertext:", BinaryToHex(ciphertext),"\n\n")
 
-
 ##########################################
-##########################################
+##### Avalanche Effect Demonstration #####
 ##########################################
 
 cipher = AES.new(key=byte_key, mode=MODE_ECB)
