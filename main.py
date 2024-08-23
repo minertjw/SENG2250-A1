@@ -37,18 +37,12 @@ def XOR(outIV, chunk):
             result += str(0)
     return result
 
-def compareCipher(ciphertext1, ciphertext2):
+def compareCiphertext(ciphertext1, ciphertext2):
     differences = 0
-    difference_positions = ""
-    for j in range(len(ciphertext1)):
-        if ciphertext1[j] != ciphertext2[j]:
+    for i in range(len(ciphertext1)):
+        if ciphertext1[i] != ciphertext2[i]:
             differences+=1
-            difference_positions+=u'\u2193'
-        else:
-            difference_positions+=" "
-        if (j+1)%8==0:
-            difference_positions+=" "
-    print("Number of altered bits ",counter, " = ",differences,sep="")
+    return differences
 
 # 256-bit key (32 bytes)
 # Storing as a hexadecimal number, but need to convert to string and then encode as bytes
@@ -93,67 +87,86 @@ for i in range(0, len(byte_plaintext), len(iv)):
 print("\nEntire Ciphertext:", BinaryToHex(ciphertext),"\n\n")
 
 
-# five unique 1-bit flips
-plaintext = "A good Plaintext"
-byte_plaintext = bytearray(plaintext.encode())
-
-# nicePrintBits(ByteToBit(byte_plaintext))
+##########################################
+##########################################
+##########################################
 
 cipher = AES.new(key=byte_key, mode=MODE_ECB)
 
-original_ciphertext = ByteToBit(cipher.encrypt(byte_plaintext))
+plaintext_original = bytearray("A Good Plaintext".encode())
+ciphertext_original = ByteToBit(cipher.encrypt(plaintext_original))
 
-ciphertext_list = []
-swap_position = 0
+ciphertext_variants = [ciphertext_original]
+swap_index = 0
 counter = 1
 for j in range(5):
-    new_plaintext = ""
-    for i in range(0,len(ByteToBit(byte_plaintext))):
-        if (i == swap_position):
-            if (ByteToBit(byte_plaintext)[i] == "0"):
-                new_plaintext += "1"
+    # Copy the original plaintext, flipping a single bit at the swap position index
+    plaintext_variant = ""
+    for i in range(0,len(ByteToBit(plaintext_original))):
+        if (i == swap_index):
+            if (ByteToBit(plaintext_original)[i] == "0"):
+                plaintext_variant += "1"
             else:
-                new_plaintext += "0"
+                plaintext_variant += "0"
         else:
-            new_plaintext += ByteToBit(byte_plaintext)[i]
-    print("1-bit flip ", counter,sep="")
+            plaintext_variant += ByteToBit(plaintext_original)[i]
+
+    # Print header information
+    print("Bit Flip ", counter,sep="")
+
+    # Print original plaintext
     print("Original Plaintext: ",end="")
-    nicePrintBits(ByteToBit(byte_plaintext))
-    print("Swap Index =",swap_position,":    ", end="") 
-    for i in range(swap_position+int(swap_position/8)):
+    nicePrintBits(ByteToBit(plaintext_original))
+
+    # Print arrows indicating bit flip location
+    print("Swap Index = ",swap_index,":    ", end="",sep="") 
+    for i in range(swap_index+int(swap_index/8)):
+        print(" ",end="")
+    if (len(str(swap_index)) == 1):
         print(" ",end="")
     print(u'\u2193')
-    swap_position += int(len(ByteToBit(byte_plaintext))/5)
+
+    # Print altered plaintext
     print("Altered Plaintext:  ",end="")
-    nicePrintBits(new_plaintext)
-    new_byte_plaintext = bytearray.fromhex(BinaryToHex(new_plaintext))
-    ciphertext = cipher.encrypt(new_byte_plaintext)
-    #nicePrintBits(ByteToBit(ciphertext))
+    nicePrintBits(plaintext_variant)
     print("")
-    ciphertext_list.append(ByteToBit(ciphertext))
-    counter+=1
 
-ciphertext = cipher.encrypt(byte_plaintext)
+    # Create the altered plaintext's associated ciphertext and save to array
+    ciphertext_variant = cipher.encrypt(bytearray.fromhex(BinaryToHex(plaintext_variant)))
+    ciphertext_variants.append(ByteToBit(ciphertext_variant))
 
+    # Increment required variables
+    swap_index += int(len(ByteToBit(plaintext_original))/5)
+    counter += 1
+
+# Print out specific example of ciphertext avalanche analysis
+print("\nCiphertext Variant 4: ", end="")
+nicePrintBits(ciphertext_variants[4])
+print("Difference Arrows:    ", end="")
+differences = 0
+for i in range(len(ciphertext_variants[4])):
+    if ciphertext_variants[4][i] != ciphertext_variants[5][i]:
+        differences+=1
+        print(u"\u2193", end="")
+    else:
+        print(" ", end="")
+    if ((i+1)%8 == 0):
+        print(" ",end="")
 print("")
-counter = 1
-for variant_ciphertext in ciphertext_list:
-    differences = 0
-    difference_positions = ""
-    for j in range(len(variant_ciphertext)):
-        if original_ciphertext[j] != variant_ciphertext[j]:
-            differences+=1
-            difference_positions+=u'\u2193'
-        else:
-            difference_positions+=" "
-        if (j+1)%8==0:
-            difference_positions+=" "
-    print("Number of altered bits ",counter, " = ",differences,sep="")
-    print("Original Ciphertext:  ", end="")
-    nicePrintBits(original_ciphertext)
-    print("Difference Positions: ", end="")
-    print(difference_positions)
-    print("Altered Ciphertext:   ", end="")
-    nicePrintBits(variant_ciphertext)
+print("Ciphertext Variant 5: ", end="")
+nicePrintBits(ciphertext_variants[5])
+print("\nTotal Differences =", differences)
+print("Percentage Difference = ", "{:5.2f}".format((differences/len(ciphertext_variants[4]))*100), "%", sep="")
+
+# Print out difference table
+print("\n\n   |  ", end="")
+for i in range(len(ciphertext_variants)):
+    print(" C", i, "   |  ", end="", sep="")
+print("")
+
+for i in range(len(ciphertext_variants)):
+    print("C", i, end=" | ", sep="")
+    for j in range(len(ciphertext_variants)):
+        differences = compareCiphertext(ciphertext_variants[i], ciphertext_variants[j])
+        print("{:5.2f}".format(differences/len(ciphertext_variants[i])*100), "%", sep="", end=" | ")
     print("")
-    counter+=1
