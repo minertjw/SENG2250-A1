@@ -9,9 +9,9 @@ os.system('cls')
 # Set the seed of the random module to allow for easier debugging during development
 random.seed(1)
 
-##########################################
-######### AES CTR Demonstration ##########
-##########################################
+#########################################
+############### Functions ###############
+#########################################
 
 # Prints the Initialisation Vector
 def printIV(iv):
@@ -66,6 +66,10 @@ def BinaryToHex(binary_string):
     for i in range(0, len(binary_string), 4):
         hex_string += hex(int(binary_string[i:i+4],2)).split('x')[1]
     return hex_string
+
+#########################################
+######### AES CTR Demonstration #########
+#########################################
 
 # 256-bit key (32 bytes)
 # Storing as a hexadecimal number, but need to convert to string and then encode as bytes
